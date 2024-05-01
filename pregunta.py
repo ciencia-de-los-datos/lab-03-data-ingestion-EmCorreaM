@@ -11,30 +11,28 @@ espacio entre palabra y palabra.
 """
 import pandas as pd
 
-
 def ingest_data():
-    with open('clusters_report.txt', 'r') as archivo:
-        lineas = archivo.readlines()
+    # Lee el archivo 'clusters_report.txt' y separa las líneas
+    with open('clusters_report.txt', 'r') as file:
+        lines = file.readlines()
 
-    datos = []
+    # Procesa las líneas para formar filas del DataFrame
+    data = []
+    for line in lines:
+        # Divide cada línea en palabras clave separadas por coma
+        keywords = line.strip().split(',')
+        # Formatea las palabras clave con un solo espacio entre palabra y palabra
+        formatted_keywords = ', '.join(keyword.strip() for keyword in keywords)
+        data.append(formatted_keywords)
 
-    for linea in lineas:
-        if not linea.startswith('-'):
-            columnas = linea.split()
+    # Construye el DataFrame
+    df = pd.DataFrame(data, columns=['keywords'])
 
-            if len(columnas) > 1:
-                cluster = columnas[0]
-                cantidad_palabras_clave = columnas[1]
-                porcentaje_palabras_clave = columnas[2]
-                palabras_clave = ' '.join(columnas[3:]).replace(',', ', ')
-
-                datos.append([cluster, cantidad_palabras_clave, porcentaje_palabras_clave, palabras_clave])
-
-    df = pd.DataFrame(datos, columns=['cluster', 'cantidad_palabras_clave', 'porcentaje_palabras_clave', 'palabras_clave'])
-
+    # Cambia los nombres de las columnas a minúsculas y reemplaza espacios por guiones bajos
     df.columns = df.columns.str.lower().str.replace(' ', '_')
 
     return df
 
+# Llama a la función para obtener el DataFrame
 df = ingest_data()
 print(df)
