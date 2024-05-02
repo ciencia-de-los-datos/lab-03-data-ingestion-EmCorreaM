@@ -7,32 +7,36 @@ cuenta que los nombres de las columnas deben ser en minusculas, reemplazando los
 por guiones bajos; y que las palabras clave deben estar separadas por coma y con un solo 
 espacio entre palabra y palabra.
 
-
 """
 import pandas as pd
 
 def ingest_data():
-    # Lee el archivo 'clusters_report.txt' y separa las líneas
-    with open('clusters_report.txt', 'r') as file:
-        lines = file.readlines()
+    with open("clusters_report.txt", 'r') as file:
+        lineas = file.readlines()[4:]
 
-    # Procesa las líneas para formar filas del DataFrame
     data = []
-    for line in lines:
-        # Divide cada línea en palabras clave separadas por coma
-        keywords = line.strip().split(',')
-        # Formatea las palabras clave con un solo espacio entre palabra y palabra
-        formatted_keywords = ', '.join(keyword.strip() for keyword in keywords)
-        data.append(formatted_keywords)
+    fila_actual = ''
+    for linea in lineas:
+        linea_strip = linea.strip()
+        if not linea_strip:
+            if fila_actual:
+                data.append(fila_actual.strip())
+                fila_actual = ''
+        else:
+            fila_actual += ' ' + linea_strip
 
-    # Construye el DataFrame
-    df = pd.DataFrame(data, columns=['keywords'])
+    if fila_actual:
+        data.append(fila_actual.strip())
 
-    # Cambia los nombres de las columnas a minúsculas y reemplaza espacios por guiones bajos
-    df.columns = df.columns.str.lower().str.replace(' ', '_')
+    df = pd.DataFrame(data, columns=['Columna'])
+    df['Columna'] = df['Columna'].str.replace(r'\s+%', '', regex=True)
+    df['Columna'] = df['Columna'].str.strip().apply(lambda x: x if x.isdigit() else x.strip())
+    df = df['Columna'].str.replace(r'\s+', ' ').str.split(' ', n=3, expand=True)
+
+    df.columns = ['cluster', 'cantidad_de_palabras_clave', 'porcentaje_de_palabras_clave', 'principales_palabras_clave']
+    df['porcentaje_de_palabras_clave'] = df['porcentaje_de_palabras_clave'].str.replace(',', '.')
+    df['principales_palabras_clave'] = df['principales_palabras_clave'].str.replace('.', '')
+    df[['cantidad_de_palabras_clave', 'cluster']] = df[['cantidad_de_palabras_clave', 'cluster']].astype(int)
+    df['porcentaje_de_palabras_clave'] = df['porcentaje_de_palabras_clave'].astype(float)
 
     return df
-
-# Llama a la función para obtener el DataFrame
-df = ingest_data()
-print(df)
